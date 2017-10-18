@@ -26,6 +26,11 @@ import edu.unh.cs.treccartool.Data;
 import edu.unh.cs.treccartool.read_data.DeserializeData;
 import edu.unh.cs.treccartool.read_data.DeserializeData.RuntimeCborException;
 
+/**
+ * Encapsulates the idea of the run file string and splits it into separate parts.
+ *
+ * @author amf2015
+ */
 class RunFileString {
     public String queryId;
     public String paraId;
@@ -34,6 +39,10 @@ class RunFileString {
     public String teamName;
     public String methodName;
 
+    /**
+     * Creates the default runfile string. For this implementation, teamName and methodName
+     *  are fixed at "team1" and "LM-Jelinek-Mercer" respectively.
+     */
     RunFileString()
     {
         queryId = "";
@@ -44,6 +53,15 @@ class RunFileString {
         methodName = "LM-Jelinek-Mercer";
     }
 
+    /**
+     * Create a runfile string with the given properties. teamName and methodName left out because
+     *  they will be similar across the board for this program.
+     *
+     * @param qid   The Page Name used as the queryId
+     * @param pid   The paragraph Id
+     * @param r     The rank of the document
+     * @param s     The score of the document
+     */
     RunFileString(String qid, String pid, int r, float s)
     {
         queryId = qid;
@@ -54,6 +72,11 @@ class RunFileString {
         methodName = "LM-Jelinek-Mercer";
     }
 
+    /**
+     * Convert all the components into the final runfile string for the document
+     *
+     * @return String
+     */
     public String toString()
     {
         return (queryId + " Q0 " + paraId + " " + rank + " " + score + " " + teamName + "-" + methodName);
