@@ -26,7 +26,7 @@ import edu.unh.cs.treccartool.Data;
 import edu.unh.cs.treccartool.read_data.DeserializeData;
 import edu.unh.cs.treccartool.read_data.DeserializeData.RuntimeCborException;
 
-private class RunFileString {
+class RunFileString {
     public String queryId;
     public String paraId;
     public int rank;
@@ -36,17 +36,41 @@ private class RunFileString {
 
     RunFileString()
     {
+        queryId = "";
+        paraId = "";
+        rank = 0;
+        score = 0.0f;
+        teamName = "team1";
+        methodName = "LM-Jelinek-Mercer";
+    }
 
+    RunFileString(String qid, String pid, int r, float s)
+    {
+        queryId = qid;
+        paraId = pid;
+        rank = r;
+        score = s;
+        teamName = "team1";
+        methodName = "LM-Jelinek-Mercer";
+    }
+
+    public String toString()
+    {
+        return (queryId + " Q0 " + paraId + " " + rank + " " + score + " " + teamName + "-" + methodName);
     }
 }
 
 public class LanguageModel_UJM {
 
 
-    ArrayList<String>
+    ArrayList<RunFileString> output;
 
     LanguageModel_UJM(ArrayList<Data.Page> pagelist)
     {
-
+        for(Data.Page page : pagelist) {
+            RunFileString sprint = new RunFileString();
+            sprint.paraId = page.getPageId();
+            sprint.queryId = page.getPageName();
+        }
     }
 }
