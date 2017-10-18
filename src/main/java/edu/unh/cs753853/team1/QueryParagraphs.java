@@ -70,104 +70,6 @@ public class QueryParagraphs {
 		iw.addDocument(paradoc);
 	}
 
-	/*
-	 * public void doSearch(String qstring, int n) throws IOException,
-	 * ParseException { if ( is == null ) { is = new
-	 * IndexSearcher(DirectoryReader.open(FSDirectory.open((new
-	 * File(INDEX_DIRECTORY).toPath())))); }
-	 * 
-	 * if ( customScore ) { SimilarityBase mySimiliarity = new SimilarityBase()
-	 * { protected float score(BasicStats stats, float freq, float docLen) {
-	 * return freq; }
-	 * 
-	 * @Override public String toString() { return null; } };
-	 * is.setSimilarity(mySimiliarity); }
-	 * 
-	 * 
-	 * if (qp == null) { qp = new QueryParser("parabody", new
-	 * StandardAnalyzer()); }
-	 * 
-	 * Query q; TopDocs tds; ScoreDoc[] retDocs;
-	 * 
-	 * System.out.println("Query: " + qstring); q = qp.parse(qstring); tds =
-	 * is.search(q, n); retDocs = tds.scoreDocs; Document d; for (int i = 0; i <
-	 * retDocs.length; i++) { d = is.doc(retDocs[i].doc); System.out.println(
-	 * "Doc " + i); System.out.println("Score " + tds.scoreDocs[i].score);
-	 * System.out.println(d.getField("paraid").stringValue());
-	 * System.out.println(d.getField("parabody").stringValue() + "\n");
-	 * 
-	 * } }
-	 */
-
-	private void customScore(boolean custom) throws IOException {
-		customScore = custom;
-	}
-
-	/**
-	 *
-	 * @param page
-	 * @param n
-	 * @param filename
-	 * @throws IOException
-	 * @throws ParseException
-	 */
-	private void rankParas(Data.Page page, int n, String filename) throws IOException, ParseException {
-		if (is == null) {
-			is = new IndexSearcher(DirectoryReader.open(FSDirectory.open((new File(INDEX_DIRECTORY).toPath()))));
-		}
-
-		if (customScore) {
-			SimilarityBase mySimiliarity = new SimilarityBase() {
-				protected float score(BasicStats stats, float freq, float docLen) {
-					return freq;
-				}
-
-				@Override
-				public String toString() {
-					return null;
-				}
-			};
-			is.setSimilarity(mySimiliarity);
-		}
-
-		if (qp == null) {
-			qp = new QueryParser("parabody", new StandardAnalyzer());
-		}
-
-		Query q;
-		TopDocs tds;
-		ScoreDoc[] retDocs;
-
-		System.out.println("Query: " + page.getPageName());
-		q = qp.parse(page.getPageName());
-
-		tds = is.search(q, n);
-		retDocs = tds.scoreDocs;
-		Document d;
-		ArrayList<String> runStringsForPage = new ArrayList<String>();
-		String method = "lucene-score";
-		if (customScore)
-			method = "custom-score";
-		for (int i = 0; i < retDocs.length; i++) {
-			d = is.doc(retDocs[i].doc);
-			System.out.println("Doc " + i);
-			System.out.println("Score " + tds.scoreDocs[i].score);
-			System.out.println(d.getField("paraid").stringValue());
-			System.out.println(d.getField("parabody").stringValue() + "\n");
-
-			// runFile string format $queryId Q0 $paragraphId $rank $score
-			// $teamname-$methodname
-			String runFileString = page.getPageId() + " Q0 " + d.getField("paraid").stringValue() + " " + i + " "
-					+ tds.scoreDocs[i].score + " team1-" + method;
-			runStringsForPage.add(runFileString);
-		}
-
-		FileWriter fw = new FileWriter(QueryParagraphs.OUTPUT_DIR + "/" + filename, true);
-		for (String runString : runStringsForPage)
-			fw.write(runString + "\n");
-		fw.close();
-	}
-
 	private ArrayList<Data.Page> getPageListFromPath(String path) {
 		ArrayList<Data.Page> pageList = new ArrayList<Data.Page>();
 		try {
@@ -187,6 +89,20 @@ public class QueryParagraphs {
 		return pageList;
 	}
 
+	public void writeRunfile(String filename, ArrayList<String> runfileStrings)
+	{
+	    String fullpath = OUTPUT_DIR + "/" + filename;
+	    try ( FileWriter runfile = new FileWriter(new File(fullpath)) ) {
+            for (String line : runfileStrings) {
+                runfile.write(line);
+            }
+
+            runfile.close();
+        } catch (IOException e) {
+            System.out.println("Could not open " + fullpath);
+        }
+	}
+
 	public static void main(String[] args) {
 		QueryParagraphs q = new QueryParagraphs();
 		int topSearch = 100;
@@ -204,37 +120,8 @@ public class QueryParagraphs {
 			 */
 			ArrayList<Data.Page> pagelist = q.getPageListFromPath(QueryParagraphs.Cbor_OUTLINE);
 
-			File f = new File(OUTPUT_DIR + "/result-lucene.run");
-			if (f.exists()) {
-				FileWriter createNewFile = new FileWriter(f);
-				createNewFile.write("");
-			}
-			for (Data.Page page : pagelist) {
 
-				q.rankParas(page, 100, "result-lucene.run");
-			}
-
-			q.customScore(true);
-			f = new File(OUTPUT_DIR + "/result-custom.run");
-			if (f.exists()) {
-				FileWriter createNewFile = new FileWriter(f);
-				createNewFile.write("");
-			}
-			for (Data.Page page : pagelist) {
-
-				q.rankParas(page, 100, "result-custom.run");
-			}
-
-			TFIDF_anc_apc tfidf_anc_apc = new TFIDF_anc_apc();
-			tfidf_anc_apc.retrieveAllAncApcResults(pagelist, OUTPUT_DIR + "/tfidf_anc_apc.run");
-
-			TFIDF_bnn_bnn tfidf_bnn_bnn = new TFIDF_bnn_bnn(pagelist, 100);
-			tfidf_bnn_bnn.doScoring();
-
-			TFIDF_lnc_ltn tfidf_lnc_ltn = new TFIDF_lnc_ltn(pagelist, 100);
-			tfidf_lnc_ltn.dumpScoresTo(OUTPUT_DIR + "/tfidf_lnc_ltn.run");
-
-		} catch (CborException | IOException | ParseException e) {
+		} catch (CborException | IOException /*| ParseException*/ e) {
 			e.printStackTrace();
 		}
 
