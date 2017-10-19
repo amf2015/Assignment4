@@ -86,7 +86,7 @@ public class QueryParagraphs {
 		String fullpath = OUTPUT_DIR + "/" + filename;
 		try (FileWriter runfile = new FileWriter(new File(fullpath))) {
 			for (String line : runfileStrings) {
-				runfile.write(line);
+				runfile.write(line + "\n");
 			}
 
 			runfile.close();
