@@ -37,7 +37,7 @@ import org.apache.lucene.store.FSDirectory;
 import edu.unh.cs.treccartool.Data;
 
 //Bigram Language Model with Laplace smoothing. 
-public class Bigram_LM {
+public class LanguageMode_BL {
 
 	static final private String INDEX_DIRECTORY = "index";
 	static private QueryParser parser = null;

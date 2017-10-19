@@ -33,7 +33,7 @@ public class QueryParagraphs {
 	private boolean customScore = false;
 
 	// directory structure..
-	static final private String INDEX_DIRECTORY = "index";
+	static final String INDEX_DIRECTORY = "index";
 	static final private String Cbor_FILE = "test200.cbor/train.test200.cbor.paragraphs";
 	static final private String Cbor_OUTLINE = "test200.cbor/train.test200.cbor.outlines";
 	static final private String OUTPUT_DIR = "output";
@@ -112,7 +112,7 @@ public class QueryParagraphs {
 			 * a.doSearch(qstring, topSearch); }
 			 */
 			ArrayList<Data.Page> pagelist = q.getPageListFromPath(QueryParagraphs.Cbor_OUTLINE);
-			Bigram_LM.RankDocWithBigram_LM(pagelist, "./result-bigram.run");
+			LanguageMode_BL.RankDocWithBigram_LM(pagelist, "./result-bigram.run");
 
 			LanguageModel_UJM ranking = new LanguageModel_UJM(pagelist, 100);
 			q.writeRunfile("UJM.run", ranking.getResults());
