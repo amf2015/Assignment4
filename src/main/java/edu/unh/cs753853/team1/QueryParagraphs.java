@@ -33,7 +33,7 @@ public class QueryParagraphs {
 	private boolean customScore = false;
 
 	// directory structure..
-	static final private String INDEX_DIRECTORY = "index";
+	static final String INDEX_DIRECTORY = "index";
 	static final private String Cbor_FILE = "test200.cbor/train.test200.cbor.paragraphs";
 	static final private String Cbor_OUTLINE = "test200.cbor/train.test200.cbor.outlines";
 	static final private String OUTPUT_DIR = "output";
@@ -103,21 +103,26 @@ public class QueryParagraphs {
 
 		try {
 			q.indexAllParagraphs();
-			/*
-			 * for(String qstring:queryArr) { a.doSearch(qstring, topSearch); }
-			 * 
-			 * System.out.println(StringUtils.repeat("=", 300));
-			 * 
-			 * a.customScore(true); for(String qstring:queryArr) {
-			 * a.doSearch(qstring, topSearch); }
-			 */
 			ArrayList<Data.Page> pagelist = q.getPageListFromPath(QueryParagraphs.Cbor_OUTLINE);
-			Bigram_LM.RankDocWithBigram_LM(pagelist, "./result-bigram.run");
 
-			LanguageModel_UJM ranking = new LanguageModel_UJM(pagelist, 100);
-			q.writeRunfile("UJM.run", ranking.getResults());
+			// UL
+			System.out.println("Run LanguageMode_UL...");
+			UnigramLanguageModel UL_ranking = new UnigramLanguageModel(pagelist, 100);
+			q.writeRunfile("U-L.run", UL_ranking.getResults());
 
-		} catch (CborException | IOException /*| ParseException*/ e) {
+			// UJM
+			System.out.println("Run LanguageMode_UJM...");
+			LanguageModel_UJM UJM_ranking = new LanguageModel_UJM(pagelist, 100);
+			q.writeRunfile("UJM.run", UJM_ranking.getResults());
+
+			// UDS
+			System.out.println("Run LanguageMode_UDS...");
+			LanguageModel_UDS UDS_ranking = new LanguageModel_UDS(pagelist);
+
+			// BL
+			System.out.println("Run LanguageMode_BL...");
+			LanguageMode_BL.RankDocWithBigram_LM(pagelist, "output/BL.run");
+		} catch (CborException | IOException /* | ParseException */ e) {
 			e.printStackTrace();
 		}
 
