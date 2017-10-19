@@ -13,18 +13,11 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.similarities.BasicStats;
-import org.apache.lucene.search.similarities.SimilarityBase;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -76,7 +69,7 @@ public class QueryParagraphs {
 			FileInputStream fis = new FileInputStream(new File(path));
 			for (Data.Page page : DeserializeData.iterableAnnotations(fis)) {
 				pageList.add(page);
-				System.out.println(page.toString());
+				// System.out.println(page.toString());
 
 			}
 		} catch (FileNotFoundException e) {
@@ -89,24 +82,24 @@ public class QueryParagraphs {
 		return pageList;
 	}
 
-	public void writeRunfile(String filename, ArrayList<String> runfileStrings)
-	{
-	    String fullpath = OUTPUT_DIR + "/" + filename;
-	    try ( FileWriter runfile = new FileWriter(new File(fullpath)) ) {
-            for (String line : runfileStrings) {
-                runfile.write(line);
-            }
+	public void writeRunfile(String filename, ArrayList<String> runfileStrings) {
+		String fullpath = OUTPUT_DIR + "/" + filename;
+		try (FileWriter runfile = new FileWriter(new File(fullpath))) {
+			for (String line : runfileStrings) {
+				runfile.write(line);
+			}
 
-            runfile.close();
-        } catch (IOException e) {
-            System.out.println("Could not open " + fullpath);
-        }
+			runfile.close();
+		} catch (IOException e) {
+			System.out.println("Could not open " + fullpath);
+		}
 	}
 
 	public static void main(String[] args) {
 		QueryParagraphs q = new QueryParagraphs();
 		int topSearch = 100;
-		String[] queryArr = { "power nap benefits", "whale vocalization production of sound", "pokemon puzzle league" };
+		// String[] queryArr = { "power nap benefits", "whale vocalization
+		// production of sound", "pokemon puzzle league" };
 
 		try {
 			q.indexAllParagraphs();
@@ -119,9 +112,9 @@ public class QueryParagraphs {
 			 * a.doSearch(qstring, topSearch); }
 			 */
 			ArrayList<Data.Page> pagelist = q.getPageListFromPath(QueryParagraphs.Cbor_OUTLINE);
+			Bigram_LM.RankDocWithBigram_LM(pagelist, "./result-bigram.run");
 
-
-		} catch (CborException | IOException /*| ParseException*/ e) {
+		} catch (CborException | IOException /* | ParseException */ e) {
 			e.printStackTrace();
 		}
 
