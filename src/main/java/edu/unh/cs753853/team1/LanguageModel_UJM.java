@@ -137,7 +137,7 @@ class LanguageModel_UJM {
             for(Map.Entry<String, Float> paraResult: paraResults.entrySet())
             {
                 String paraId = paraResult.getKey();
-                float score = paraResult.getValue();
+                float score = (float)Math.pow(10, paraResult.getValue());
                 DocumentResults docResult = new DocumentResults(paraId, score);
                 docQueue.add(docResult);
             }
