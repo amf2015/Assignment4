@@ -1,6 +1,8 @@
 package edu.unh.cs753853.team1;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -13,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -41,12 +44,16 @@ public class BigramModel {
 	static private Integer docNum = 100;
 	static private String TEAM_METHOD = "Team1-Bigram";
 
-	public static void main(String[] args) throws IOException {
-		String str = "This is a test string! TEXt";
-		ArrayList<String> list = analyzeByBigram(str);
-		System.out.println(list);
-
-	}
+	// public static void main(String[] args) throws IOException {
+	// // String str = "This is a test string! TEXt";
+	// // ArrayList<String> list = analyzeByBigram(str);
+	// // System.out.println(list);
+	//
+	// HashMap<String, Float> map = new HashMap<String, Float>();
+	// map = getRankedDocuments("power nap benefits");
+	// System.out.println(map);
+	//
+	// }
 
 	private static IndexReader getInedexReader(String path) throws IOException {
 		return DirectoryReader.open(FSDirectory.open((new File(path).toPath())));
@@ -67,17 +74,34 @@ public class BigramModel {
 		return freqSim;
 	}
 
-	public static void RankDocWithBigramModel(ArrayList<Data.Page> queryList, String path) {
+	public static void RankDocWithBigram_LM(ArrayList<Data.Page> queryList, String path) {
 		ArrayList<String> runFileStrList = new ArrayList<String>();
 		if (queryList != null) {
 			for (Data.Page p : queryList) {
 				String queryStr = p.getPageId();
+				System.out.println("Query String: " + queryStr);
+				HashMap<String, Float> result_map = getRankedDocuments(queryStr);
+				int i = 0;
+				for (Entry<String, Float> entry : result_map.entrySet()) {
+					String runFileString = queryStr + " Q0 " + entry.getKey() + " " + i + " " + entry.getValue() + " "
+							+ TEAM_METHOD;
+					runFileStrList.add(runFileString);
+					i++;
+				}
 			}
 		}
+
+		// Write run file function
+		if (runFileStrList.size() > 0) {
+			writeStrListToRunFile(runFileStrList, path);
+		} else {
+			System.out.println("No result for run file.");
+		}
+
 	}
 
-	private static HashMap<String, Double> getRankedDocuments(String queryStr) {
-		HashMap<String, Double> doc_score = new HashMap<String, Double>();
+	private static HashMap<String, Float> getRankedDocuments(String queryStr) {
+		HashMap<String, Float> doc_score = new HashMap<String, Float>();
 
 		try {
 			IndexReader ir = getInedexReader(INDEX_DIRECTORY);
@@ -93,7 +117,7 @@ public class BigramModel {
 				Document doc = se.doc(hits[i].doc);
 				String docId = doc.get("paraid");
 				String docBody = doc.get("parabody");
-				ArrayList<Double> p_wt = new ArrayList<Double>();
+				ArrayList<Float> p_wt = new ArrayList<Float>();
 
 				ArrayList<String> bigram_list = analyzeByBigram(docBody);
 				ArrayList<String> unigram_list = analyzeByUnigram(docBody);
@@ -107,8 +131,7 @@ public class BigramModel {
 				for (String term : query_list) {
 					if (pre_term == "") {
 						int tf = countExactStrFreqInList(term, unigram_list);
-						double p = (double) tf / (double) size_of_doc;
-						// Needs to smoothing p;
+						float p = laplaceSmoothingWith1(tf, size_of_doc, size_of_voc);
 						p_wt.add(p);
 					} else {
 						// Get total occurrences with given term.
@@ -118,13 +141,16 @@ public class BigramModel {
 						// Get occurrences of term with given term.
 						String str = pre_term + " " + term;
 						int tf = countExactStrFreqInList(str, bigram_list);
-						double p = (double) tf_given_term / (double) tf;
+						float p = laplaceSmoothingWith1(tf_given_term, tf, size_of_voc);
 						p_wt.add(p);
 					}
 					pre_term = term;
 				}
 
 				// Caculate score with log;
+				System.out.println(p_wt);
+				float score = getScoreByPListWithLog(p_wt);
+				doc_score.put(docId, score);
 
 			}
 
@@ -132,10 +158,20 @@ public class BigramModel {
 			e.printStackTrace();
 		}
 
-		return doc_score;
+		return sortByValue(doc_score);
 	}
 
 	// Utility methods
+
+	// Get score from list of p.
+	private static float getScoreByPListWithLog(ArrayList<Float> p_list) {
+		float score = 0;
+		for (Float wt : p_list) {
+			score = (float) ((float) score + Math.log(wt));
+		}
+		return score;
+
+	}
 
 	// Get exact count.
 	private static int countExactStrFreqInList(String term, ArrayList<String> list) {
@@ -156,8 +192,8 @@ public class BigramModel {
 		return occurrences;
 	}
 
-	private static double laplaceSmoothingWith1(double x, double y, int size_of_v) {
-		double p = (double) x + 1.0 / (double) y + (double) size_of_v;
+	private static float laplaceSmoothingWith1(int tf_given_term, int tf, int size_of_v) {
+		float p = (float) (tf_given_term + 1) / (float) (tf + size_of_v);
 		return p;
 	}
 
@@ -172,7 +208,7 @@ public class BigramModel {
 
 	private static ArrayList<String> analyzeByBigram(String inputStr) throws IOException {
 		Reader reader = new StringReader(inputStr);
-		System.out.println("Input text: " + inputStr);
+		// System.out.println("Input text: " + inputStr);
 		ArrayList<String> strList = new ArrayList<String>();
 		Analyzer analyzer = new BigramAnalyzer();
 		TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
@@ -182,7 +218,7 @@ public class BigramModel {
 		while (tokenizer.incrementToken()) {
 			String token = charTermAttribute.toString();
 			strList.add(token);
-			System.out.println(token);
+			// System.out.println(token);
 		}
 		tokenizer.end();
 		tokenizer.close();
@@ -191,7 +227,7 @@ public class BigramModel {
 
 	private static ArrayList<String> analyzeByUnigram(String inputStr) throws IOException {
 		Reader reader = new StringReader(inputStr);
-		System.out.println("Input text: " + inputStr);
+		// System.out.println("Input text: " + inputStr);
 		ArrayList<String> strList = new ArrayList<String>();
 		Analyzer analyzer = new UnigramAnalyzer();
 		TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
@@ -201,29 +237,66 @@ public class BigramModel {
 		while (tokenizer.incrementToken()) {
 			String token = charTermAttribute.toString();
 			strList.add(token);
-			System.out.println(token);
+			// System.out.println(token);
 		}
 		tokenizer.end();
 		tokenizer.close();
 		return strList;
 	}
 
-	// Sort Descending HashMap<String, Double>Map by its value
-	private static HashMap<String, Double> sortByValue(Map<String, Double> unsortMap) {
+	// Sort Descending HashMap<String, float>Map by its value
+	private static HashMap<String, Float> sortByValue(Map<String, Float> unsortMap) {
 
-		List<Map.Entry<String, Double>> list = new LinkedList<Map.Entry<String, Double>>(unsortMap.entrySet());
+		List<Map.Entry<String, Float>> list = new LinkedList<Map.Entry<String, Float>>(unsortMap.entrySet());
 
-		Collections.sort(list, new Comparator<Map.Entry<String, Double>>() {
-			public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) {
+		Collections.sort(list, new Comparator<Map.Entry<String, Float>>() {
+
+			public int compare(Map.Entry<String, Float> o1, Map.Entry<String, Float> o2) {
 				return (o2.getValue()).compareTo(o1.getValue());
 			}
 		});
 
-		HashMap<String, Double> sortedMap = new LinkedHashMap<String, Double>();
-		for (Map.Entry<String, Double> entry : list) {
+		HashMap<String, Float> sortedMap = new LinkedHashMap<String, Float>();
+		for (Map.Entry<String, Float> entry : list)
+
+		{
 			sortedMap.put(entry.getKey(), entry.getValue());
 		}
 
 		return sortedMap;
+	}
+
+	public static void writeStrListToRunFile(ArrayList<String> strList, String path) {
+		// write to run file.
+
+		BufferedWriter bWriter = null;
+		FileWriter fWriter = null;
+
+		try {
+			fWriter = new FileWriter(path);
+			bWriter = new BufferedWriter(fWriter);
+
+			for (String line : strList) {
+
+				bWriter.write(line);
+				bWriter.newLine();
+			}
+
+			System.out.println("Write all ranking result to run file: " + path);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (bWriter != null) {
+					bWriter.close();
+				}
+				if (fWriter != null) {
+					fWriter.close();
+				}
+			} catch (IOException ee) {
+				ee.printStackTrace();
+			}
+		}
+
 	}
 }
