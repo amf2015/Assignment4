@@ -33,7 +33,7 @@ public class QueryParagraphs {
 	private boolean customScore = false;
 
 	// directory structure..
-	static final private String INDEX_DIRECTORY = "index";
+	static final String INDEX_DIRECTORY = "index";
 	static final private String Cbor_FILE = "test200.cbor/train.test200.cbor.paragraphs";
 	static final private String Cbor_OUTLINE = "test200.cbor/train.test200.cbor.outlines";
 	static final private String OUTPUT_DIR = "output";
@@ -99,8 +99,6 @@ public class QueryParagraphs {
 	public static void main(String[] args) {
 		QueryParagraphs q = new QueryParagraphs();
 		int topSearch = 100;
-		String[] queryArr = { "power nap benefits", "whale vocalization production of sound", "pokemon puzzle league" };
-
 		try {
 			q.indexAllParagraphs();
 			/*
@@ -113,6 +111,7 @@ public class QueryParagraphs {
 			 */
 			ArrayList<Data.Page> pagelist = q.getPageListFromPath(QueryParagraphs.Cbor_OUTLINE);
 
+			LanguageModel_UJM ranking = new LanguageModel_UJM(pagelist, 100);
 
 		} catch (CborException | IOException /*| ParseException*/ e) {
 			e.printStackTrace();
