@@ -27,14 +27,28 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 import co.nstant.in.cbor.CborException;
 import edu.unh.cs.treccartool.Data;
 import edu.unh.cs.treccartool.read_data.DeserializeData;
 import edu.unh.cs.treccartool.read_data.DeserializeData.RuntimeCborException;
+
+class DocumentResults {
+    String paraId;
+    float score;
+
+    DocumentResults(String pid, float s)
+    {
+        paraId = pid;
+        score = s;
+    }
+}
 
 /**
  * Implements the Jelinek-Mercer Language Model for ranking documents.
@@ -43,10 +57,23 @@ import edu.unh.cs.treccartool.read_data.DeserializeData.RuntimeCborException;
  */
 class LanguageModel_UJM {
     HashMap<String, HashMap<String, Float>> results;
+    ArrayList<String> runfilestrings;
     QueryParser qp;
     IndexSearcher is;
     IndexReader ir;
     int maxResults;
+
+    PriorityQueue<DocumentResults> docQueue = new PriorityQueue<DocumentResults>(new Comparator<DocumentResults>() {
+       @Override
+       public int compare(DocumentResults d1, DocumentResults d2)
+       {
+           if(d1.score < d2.score)
+               return 1;
+           if(d1.score > d2.score)
+               return -1;
+           return 0;
+       }
+    });
 
     /**
      * Constructor for the ranking system.
@@ -54,6 +81,8 @@ class LanguageModel_UJM {
      */
     LanguageModel_UJM(ArrayList<Data.Page> pagelist, int numResults) throws IOException
     {
+        runfilestrings = new ArrayList<>();
+        results = new HashMap<>();
         maxResults = numResults;
         qp = new QueryParser("parabody", new StandardAnalyzer());
         is = new IndexSearcher(DirectoryReader.open((FSDirectory.open(new File(QueryParagraphs.INDEX_DIRECTORY).toPath()))));
@@ -61,7 +90,7 @@ class LanguageModel_UJM {
         float sumTotalTermFreq = ir.getSumTotalTermFreq("parabody");
         SimilarityBase bnn = new SimilarityBase() {
 			protected float score(BasicStats stats, float freq, float docLen) {
-			    return (float)(0.9 * (freq/docLen));
+			    return (float)(0.9*(freq/docLen));
 			}
 			@Override
 			public String toString() {
@@ -109,9 +138,24 @@ class LanguageModel_UJM {
             {
                 String paraId = paraResult.getKey();
                 float score = paraResult.getValue();
-
-                System.out.println(queryId + " " + paraId + " " + score);
+                DocumentResults docResult = new DocumentResults(paraId, score);
+                docQueue.add(docResult);
             }
+            DocumentResults docResult;
+            int count = 0;
+            while((docResult = docQueue.poll()) != null)
+            {
+                runfilestrings.add(queryId + "  Q0 " + docResult.paraId + " " + count + " " + docResult.score + " team1-LM-UJM");
+                count++;
+                if(count >= 100)
+                    break;
+            }
+            docQueue.clear();
         }
+    }
+
+    ArrayList<String> getResults()
+    {
+        return runfilestrings;
     }
 }

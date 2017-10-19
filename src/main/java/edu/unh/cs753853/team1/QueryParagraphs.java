@@ -87,7 +87,7 @@ public class QueryParagraphs {
 	    String fullpath = OUTPUT_DIR + "/" + filename;
 	    try ( FileWriter runfile = new FileWriter(new File(fullpath)) ) {
             for (String line : runfileStrings) {
-                runfile.write(line);
+                runfile.write(line + "\n");
             }
 
             runfile.close();
@@ -112,6 +112,7 @@ public class QueryParagraphs {
 			ArrayList<Data.Page> pagelist = q.getPageListFromPath(QueryParagraphs.Cbor_OUTLINE);
 
 			LanguageModel_UJM ranking = new LanguageModel_UJM(pagelist, 100);
+			q.writeRunfile("UJM.run", ranking.getResults());
 
 		} catch (CborException | IOException /*| ParseException*/ e) {
 			e.printStackTrace();
