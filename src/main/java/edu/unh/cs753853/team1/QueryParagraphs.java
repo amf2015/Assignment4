@@ -82,7 +82,6 @@ public class QueryParagraphs {
 		return pageList;
 	}
 
-<<<<<<< HEAD
 	public void writeRunfile(String filename, ArrayList<String> runfileStrings) {
 		String fullpath = OUTPUT_DIR + "/" + filename;
 		try (FileWriter runfile = new FileWriter(new File(fullpath))) {
@@ -94,31 +93,14 @@ public class QueryParagraphs {
 		} catch (IOException e) {
 			System.out.println("Could not open " + fullpath);
 		}
-=======
-	public void writeRunfile(String filename, ArrayList<String> runfileStrings)
-	{
-	    String fullpath = OUTPUT_DIR + "/" + filename;
-	    try ( FileWriter runfile = new FileWriter(new File(fullpath)) ) {
-            for (String line : runfileStrings) {
-                runfile.write(line + "\n");
-            }
-
-            runfile.close();
-        } catch (IOException e) {
-            System.out.println("Could not open " + fullpath);
-        }
->>>>>>> Austin
 	}
 
 	public static void main(String[] args) {
 		QueryParagraphs q = new QueryParagraphs();
 		int topSearch = 100;
-<<<<<<< HEAD
 		// String[] queryArr = { "power nap benefits", "whale vocalization
 		// production of sound", "pokemon puzzle league" };
 
-=======
->>>>>>> Austin
 		try {
 			q.indexAllParagraphs();
 			/*
@@ -132,14 +114,10 @@ public class QueryParagraphs {
 			ArrayList<Data.Page> pagelist = q.getPageListFromPath(QueryParagraphs.Cbor_OUTLINE);
 			Bigram_LM.RankDocWithBigram_LM(pagelist, "./result-bigram.run");
 
-<<<<<<< HEAD
-		} catch (CborException | IOException /* | ParseException */ e) {
-=======
 			LanguageModel_UJM ranking = new LanguageModel_UJM(pagelist, 100);
 			q.writeRunfile("UJM.run", ranking.getResults());
 
 		} catch (CborException | IOException /*| ParseException*/ e) {
->>>>>>> Austin
 			e.printStackTrace();
 		}
 
