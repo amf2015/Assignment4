@@ -121,7 +121,7 @@ public class QueryParagraphs {
 
 			// BL
 			System.out.println("Run LanguageMode_BL...");
-			LanguageMode_BL.RankDocWithBigram_LM(pagelist, "./BL.run");
+			LanguageMode_BL.RankDocWithBigram_LM(pagelist, "output/BL.run");
 		} catch (CborException | IOException /* | ParseException */ e) {
 			e.printStackTrace();
 		}
