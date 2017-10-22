@@ -166,6 +166,12 @@ public class LanguageModel_UDS {
 				Document doc = indexSearcher.doc(hits[i].doc);
 				String docId = doc.get("paraid");
 				float score = hits[i].score;
+
+				if(docId.equals("3062422698c70396fe4505a60c680d50022a3314"))
+                {
+                    System.out.println("UDS");
+                    System.out.println(doc.get("parabody"));
+                }
 				
 				RunFileString tmp = new RunFileString(query, docId, i, score);
 				ret.add(tmp);

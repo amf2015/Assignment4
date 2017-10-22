@@ -119,6 +119,12 @@ public class LanguageMode_BL {
 				String docBody = doc.get("parabody");
 				ArrayList<Float> p_wt = new ArrayList<Float>();
 
+				if(docId.equals("0760e843e1c62c7aeb1c21f994f05992876aa0a1"))
+				{
+					System.out.println("BL");
+					System.out.println(docBody);
+				}
+
 				ArrayList<String> bigram_list = analyzeByBigram(docBody);
 				ArrayList<String> unigram_list = analyzeByUnigram(docBody);
 				ArrayList<String> query_list = analyzeByUnigram(queryStr);

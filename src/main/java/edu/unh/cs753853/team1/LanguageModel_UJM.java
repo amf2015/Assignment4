@@ -118,6 +118,12 @@ class LanguageModel_UJM {
                 {
                     Document doc = is.doc(scores[i].doc);
                     String paraId = doc.get("paraid");
+
+                    if(paraId.equals("0760e843e1c62c7aeb1c21f994f05992876aa0a1"))
+                    {
+                        System.out.println("UJM");
+                        System.out.println(doc.get("parabody"));
+                    }
                     if(!results.get(queryId).containsKey(paraId))
                     {
                         results.get(queryId).put(paraId, 0.0f);
